@@ -1,5 +1,6 @@
 package main
 
+//
 import (
 	"bufio"
 	"fmt"
@@ -13,8 +14,6 @@ import (
 
 const bufferSize = 5           // Размер буфера
 const bufferFlushInterval = 10 // Интервал опустошения буфера (в секундах)
-
-// Функция, выполняющая фильтрацию отрицательных чисел
 func filterNegativeNumbers(input <-chan int) <-chan int {
 	log.Println("The beginning of the negative number filtering stage")
 	output := make(chan int)
@@ -28,8 +27,6 @@ func filterNegativeNumbers(input <-chan int) <-chan int {
 	}()
 	return output
 }
-
-// Функция, выполняющая фильтрацию чисел, не кратных 3
 func filterNonMultipleOfThree(input <-chan int) <-chan int {
 	log.Println("The beginning of the positive number filtering stage")
 	output := make(chan int)
@@ -44,7 +41,6 @@ func filterNonMultipleOfThree(input <-chan int) <-chan int {
 	return output
 }
 
-// Структура кольцевого буфера
 type RingBuffer struct {
 	buffer      []int
 	size        int
@@ -52,7 +48,6 @@ type RingBuffer struct {
 	readCursor  int
 }
 
-// Инициализация кольцевого буфера
 func NewRingBuffer(size int) *RingBuffer {
 	return &RingBuffer{
 		buffer:      make([]int, size),
@@ -61,8 +56,6 @@ func NewRingBuffer(size int) *RingBuffer {
 		readCursor:  0,
 	}
 }
-
-// Метод добавления элемента в буфер
 func (r *RingBuffer) Add(item int) {
 	r.buffer[r.writeCursor] = item
 	r.writeCursor = (r.writeCursor + 1) % r.size
@@ -70,8 +63,6 @@ func (r *RingBuffer) Add(item int) {
 		r.readCursor = (r.readCursor + 1) % r.size
 	}
 }
-
-// Метод опустошения буфера
 func (r *RingBuffer) Flush() []int {
 	items := make([]int, 0)
 	for r.readCursor != r.writeCursor {
@@ -80,8 +71,6 @@ func (r *RingBuffer) Flush() []int {
 	}
 	return items
 }
-
-// Функция, выполняющая буферизацию данных в кольцевом буфере
 func bufferData(input <-chan int, bufferSize int, flushInterval time.Duration) <-chan []int {
 	output := make(chan []int)
 	buffer := NewRingBuffer(bufferSize)
@@ -113,8 +102,6 @@ func bufferData(input <-chan int, bufferSize int, flushInterval time.Duration) <
 	}()
 	return output
 }
-
-// Источник данных для конвейера
 func dataSource(output chan<- int, wg *sync.WaitGroup) {
 	defer wg.Done()
 	scanner := bufio.NewScanner(os.Stdin)
@@ -136,8 +123,6 @@ func dataSource(output chan<- int, wg *sync.WaitGroup) {
 	}
 	close(output)
 }
-
-// Потребитель данных конвейера
 func dataConsumer(input <-chan []int, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for items := range input {
