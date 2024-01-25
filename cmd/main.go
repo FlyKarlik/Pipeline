@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -11,10 +12,11 @@ import (
 )
 
 const bufferSize = 5           // Размер буфера
-const bufferFlushInterval = 30 // Интервал опустошения буфера (в секундах)
+const bufferFlushInterval = 10 // Интервал опустошения буфера (в секундах)
 
 // Функция, выполняющая фильтрацию отрицательных чисел
 func filterNegativeNumbers(input <-chan int) <-chan int {
+	log.Println("The beginning of the negative number filtering stage")
 	output := make(chan int)
 	go func() {
 		for num := range input {
@@ -29,6 +31,7 @@ func filterNegativeNumbers(input <-chan int) <-chan int {
 
 // Функция, выполняющая фильтрацию чисел, не кратных 3
 func filterNonMultipleOfThree(input <-chan int) <-chan int {
+	log.Println("The beginning of the positive number filtering stage")
 	output := make(chan int)
 	go func() {
 		for num := range input {
@@ -88,6 +91,7 @@ func bufferData(input <-chan int, bufferSize int, flushInterval time.Duration) <
 			select {
 			case num, ok := <-input:
 				if ok {
+					log.Printf("Add a number %d in the buffer", num)
 					buffer.Add(num)
 				} else {
 					ticker.Stop()
@@ -100,6 +104,7 @@ func bufferData(input <-chan int, bufferSize int, flushInterval time.Duration) <
 				}
 			case <-ticker.C:
 				items := buffer.Flush()
+				log.Println("Buffer is empty")
 				if len(items) > 0 {
 					output <- items
 				}
@@ -116,10 +121,12 @@ func dataSource(output chan<- int, wg *sync.WaitGroup) {
 	for scanner.Scan() {
 		text := scanner.Text()
 		num, err := strconv.Atoi(text)
+		log.Printf("Get a data from data source")
 		if err == nil {
 			output <- num
 		} else if strings.EqualFold(text, "exit") {
 			fmt.Println("Программа закончена")
+			log.Println("The pipline was stopped")
 			os.Exit(0)
 
 		} else {
@@ -134,6 +141,7 @@ func dataSource(output chan<- int, wg *sync.WaitGroup) {
 func dataConsumer(input <-chan []int, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for items := range input {
+		log.Println("Get a data from buffer")
 		fmt.Printf("Получены данные:%v\n", items)
 	}
 }
@@ -142,6 +150,7 @@ func dataConsumer(input <-chan []int, wg *sync.WaitGroup) {
 func main() {
 	var wg sync.WaitGroup
 	wg.Add(2)
+	log.Println("Pipline was started")
 
 	sourceOutput := make(chan int)
 	filter1Output := filterNegativeNumbers(sourceOutput)
