@@ -145,12 +145,10 @@ func dataConsumer(input <-chan []int, wg *sync.WaitGroup) {
 		fmt.Printf("Получены данные:%v\n", items)
 	}
 }
-
-// Основная функция
 func main() {
 	var wg sync.WaitGroup
 	wg.Add(2)
-	log.Println("Pipline was started")
+	log.Println("The Pipline was started")
 
 	sourceOutput := make(chan int)
 	filter1Output := filterNegativeNumbers(sourceOutput)
